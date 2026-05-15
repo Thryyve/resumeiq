@@ -1,8 +1,9 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { FileSearch, History, Zap, TrendingUp } from "lucide-react";
+import { FileSearch, TrendingUp, Zap } from "lucide-react";
 import Link from "next/link";
+import AnalyticsChart from "@/components/dashboard/AnalyticsChart";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -10,12 +11,9 @@ export default async function DashboardPage() {
   const analyses = await prisma.analysis.findMany({
     where: { userId: session!.user.id },
     orderBy: { createdAt: "desc" },
-    take: 5,
   });
 
-  const totalAnalyses = await prisma.analysis.count({
-    where: { userId: session!.user.id },
-  });
+  const totalAnalyses = analyses.length;
 
   const avgScore =
     analyses.length > 0
@@ -23,6 +21,17 @@ export default async function DashboardPage() {
           analyses.reduce((acc, a) => acc + a.matchScore, 0) / analyses.length
         )
       : 0;
+
+  // Prepare chart data — last 7 analyses
+  const chartData = analyses
+    .slice(0, 7)
+    .reverse()
+    .map((a, i) => ({
+      name: `#${i + 1}`,
+      score: a.matchScore,
+    }));
+
+  const recentAnalyses = analyses.slice(0, 5);
 
   return (
     <div>
@@ -64,19 +73,24 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      {/* Chart */}
+      {chartData.length > 0 && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-8">
+          <h2 className="text-white font-semibold mb-6">Match Score Trend</h2>
+          <AnalyticsChart data={chartData} />
+        </div>
+      )}
+
       {/* Recent Analyses */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-white font-semibold">Recent Analyses</h2>
-          <Link
-            href="/history"
-            className="text-blue-400 text-sm hover:underline"
-          >
+          <Link href="/history" className="text-blue-400 text-sm hover:underline">
             View all
           </Link>
         </div>
 
-        {analyses.length === 0 ? (
+        {recentAnalyses.length === 0 ? (
           <div className="text-center py-12">
             <FileSearch className="text-gray-600 mx-auto mb-3" size={40} />
             <p className="text-gray-400">No analyses yet</p>
@@ -89,35 +103,34 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {analyses.map((analysis) => (
-              <div
-                key={analysis.id}
-                className="flex items-center justify-between p-4 bg-gray-800 rounded-lg"
-              >
-                <div>
-                  <p className="text-white text-sm font-medium">
-                    Resume Analysis
-                  </p>
-                  <p className="text-gray-400 text-xs mt-0.5">
-                    {new Date(analysis.createdAt).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </p>
+            {recentAnalyses.map((analysis) => (
+              <Link key={analysis.id} href={`/history/${analysis.id}`}>
+                <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition">
+                  <div>
+                    <p className="text-white text-sm font-medium">
+                      Resume Analysis
+                    </p>
+                    <p className="text-gray-400 text-xs mt-0.5">
+                      {new Date(analysis.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                  <div
+                    className={`text-sm font-bold px-3 py-1 rounded-full ${
+                      analysis.matchScore >= 70
+                        ? "bg-green-500/20 text-green-400"
+                        : analysis.matchScore >= 40
+                        ? "bg-yellow-500/20 text-yellow-400"
+                        : "bg-red-500/20 text-red-400"
+                    }`}
+                  >
+                    {analysis.matchScore}%
+                  </div>
                 </div>
-                <div
-                  className={`text-sm font-bold px-3 py-1 rounded-full ${
-                    analysis.matchScore >= 70
-                      ? "bg-green-500/20 text-green-400"
-                      : analysis.matchScore >= 40
-                      ? "bg-yellow-500/20 text-yellow-400"
-                      : "bg-red-500/20 text-red-400"
-                  }`}
-                >
-                  {analysis.matchScore}%
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
