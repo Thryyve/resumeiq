@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Audit files
+*.xml
+xml_packer.py
+AGENTS.md
+CLAUDE.md
