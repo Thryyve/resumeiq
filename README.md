@@ -17,6 +17,18 @@ ResumeIQ lets job seekers analyze how well their resume matches a job descriptio
 
 ---
 
+## 📸 Screenshots
+
+| Landing Page | Dashboard |
+|---|---|
+| ![Landing Page](./docs/landing.png) | ![Dashboard](./docs/dashboard.png) |
+
+| Analysis Result | Billing |
+|---|---|
+| ![Analysis Result](./docs/analysis.png) | ![Billing](./docs/billing.png) |
+
+---
+
 ## Table of Contents
 
 - [Features](#-features)
