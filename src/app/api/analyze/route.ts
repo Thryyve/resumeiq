@@ -61,7 +61,7 @@ Return ONLY a valid JSON object with this exact structure (no markdown, no expla
       headers: {
         "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
+        "HTTP-Referer": "https://resumeiq-phi.vercel.app",
         "X-Title": "ResumeIQ",
       },
       body: JSON.stringify({
